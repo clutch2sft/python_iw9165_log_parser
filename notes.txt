@@ -1,0 +1,15 @@
+-realpath: Normalize and resolve a given path to its absolute path within the file system.
+-open: Open a file for reading, writing, or both, possibly creating it if it doesn’t exist.
+-read: Read data from an open file.
+-write: Write data to an open file.
+-close: Close an open file.
+-list_folder: List the contents of a directory.
+-stat: Retrieve information about a file or directory (like size, permissions, and modification time).
+-lstat: Like stat, but does not follow symbolic links.
+-remove: Delete a file.
+-rename: Rename a file or move it from one directory to another.
+-mkdir: Create a new directory.
+-rmdir: Remove a directory.
+-chattr: Change file attributes like permissions.
+-symlink: Create a symbolic link.
+readlink: Read the target of a symbolic link.

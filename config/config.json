@@ -1,0 +1,50 @@
+{
+  "devices": [
+    {
+        "device_type": "cisco_ios",
+        "ip": "172.16.5.2",
+        "username": "greggc",
+        "password": "611U4jk8",
+        "secret": "611U4jk8",
+        "__comments__": [
+            "Copy this file to config.json and update it with your device information",
+            "ip is the device ip address",
+            "username is the username to use to login to the device",
+            "password is the ssh users loging password if not provided here we call getpass() later",
+            "secret is the enable password of the device and if not provided we call getpass() later",
+            "leaving passwords empty is preferred for production use as getpass() is more secure",
+            "it is this authors opinion that putting passwords here as shown for device 2 below for lab use is ok"
+          ]
+    }
+  ],
+  "configuration": {
+    "debug_list": [
+      "debug ip packet"
+    ],
+    "alert_strings": [
+      "stop process pak for forus packet"
+    ],
+    "regex_patterns": {
+      "dot11_uplink_ev_regex": "DOT11_UPLINK_EV: parent_rssi: (-\\d+), configured low rssi: (-\\d+) serving (\\d+) scanning (\\d+)",
+      "IPRoutingInfo": "IP: tableid=0, s=(\\d+\\.\\d+\\.\\d+\\.\\d+) \\(local\\), d=(\\d+\\.\\d+\\.\\d+\\.\\d+) \\(Vlan\\d+\\), routed via FIB"
+    },
+    "output_dir": "./logs",
+    "console_level": "WARNING",
+    "log_netmiko": false,
+    "debug_netmiko": false,
+    "log_format": "%(asctime)s - %(message)s"
+  },
+  "terminal_output": {
+    "DEBUG": "gray",
+    "INFO": "black",
+    "WARNING": "orange",
+    "ERROR": "red",
+    "CRITICAL": "red,underline",
+    "ROAM_SWITCH": "red",
+    "ASSOCIATED_AP": "green",
+    "message_patterns": {
+      "Aux roam switch radio role": "ROAM_SWITCH",
+      "Associated To AP": "ASSOCIATED_AP"
+    }
+  }
+}
