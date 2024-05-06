@@ -1,0 +1,29 @@
+https://diagrams.helpful.dev/s/s:ULOwB9Kw
+
+sequenceDiagram
+    alt Communication fault with PLC
+        TCPLC -> TCPLC: Comm Fault Handler
+        Note over TCPLC: FaultBuffer
+        TCPLC->>+Fault Troublehsooter: Establish CIP Connection
+        Note over TCPLC,Fault Troublehsooter: Explicit Messaging
+        TCPLC->>+Fault Troublehsooter: Send fault info (Date, IP, etc.)
+        Note over TCPLC,Fault Troublehsooter: Explicit Messaging<br/>STRUCT:IP,DTS,ErrCode,ErrorMsg
+        Fault Troublehsooter->>+TCPLC: Acknowedge Fault
+        deactivate Fault Troublehsooter
+        Note over TCPLC: Set Ack Flag<br/> Buffer Space Free for Next fault
+        Fault Troublehsooter->>+Client: Initiate SSH
+        activate Client
+        Fault Troublehsooter->>Client: Send CLI commands
+        Client->>+Fault Troublehsooter: Send Event Logs via SFTP
+        deactivate Fault Troublehsooter
+        deactivate Client
+        activate WLC
+        Fault Troublehsooter ->> WLC: API Call Collect Client Data
+        WLC ->> Fault Troublehsooter: Client Log Data
+        deactivate WLC
+        Fault Troublehsooter->Fault Troublehsooter: Process event logs
+        Fault Troublehsooter->>+TCPLC: Send event code
+        Note over TCPLC,Fault Troublehsooter: Explicit Messaging<br/>STRUCT:IP,DTS,ErrCode,ErrorMsg
+        deactivate TCPLC
+    end
+

@@ -1,3 +1,8 @@
+"""
+This file was used pre-event driven system
+IE: When I was using a million and one callbacks.
+"""
+
 import logging, threading
 from DeviceLogger import DeviceLogger
 from ConfigurationLoader import ConfigLoader

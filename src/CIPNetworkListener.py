@@ -1,21 +1,20 @@
 import asyncio
 import logging
+from pydispatch import dispatcher
 
 class CIPNetworkListener:
-    def __init__(self, host, port, use_udp=True, message_handler=None, logger=None):
+    def __init__(self, host, port, use_udp=True, logger=None):
         """
-        Initialize the CIPNetworkListener with network settings and a message handler.
+        Initialize the CIPNetworkListener with network settings.
 
         :param host: The hostname or IP address to listen on.
         :param port: The port number to listen on.
         :param use_udp: Boolean flag to determine whether to use UDP (default) or TCP.
-        :param message_handler: Function to handle incoming messages.
         :param logger: External logger for logging purposes.
         """
         self.host = host
         self.port = port
         self.use_udp = use_udp
-        self.message_handler = message_handler
         self.logger = logger if logger else logging.getLogger('CIPNetworkListener')
         self.server = None  # To keep track of the server instance for shutdown
 
@@ -32,7 +31,7 @@ class CIPNetworkListener:
         """Start a UDP server."""
         loop = asyncio.get_running_loop()
         transport, protocol = await loop.create_datagram_endpoint(
-            lambda: UDPProtocol(self.message_handler, self.logger),
+            lambda: UDPProtocol(self.logger),
             local_addr=(self.host, self.port))
         self.server = transport
         self.logger.info(f"UDP Server listening on {self.host}:{self.port}")
@@ -52,8 +51,8 @@ class CIPNetworkListener:
                 data = await reader.read(1024)
                 if not data:
                     break
-                if self.message_handler:
-                    self.message_handler(data.decode())
+                # Emit event instead of direct handling
+                dispatcher.send(signal="NetworkDataReceived", sender="TCPConnection", data=data.decode())
         except Exception as e:
             self.logger.error(f"Error in TCP connection: {str(e)}")
         finally:
@@ -67,19 +66,16 @@ class CIPNetworkListener:
             if isinstance(self.server, asyncio.BaseServer):
                 await self.server.wait_closed()
             self.logger.info("Server has been shutdown")
-        else:
-            self.logger.warning("No server is running to shut down")
 
 class UDPProtocol(asyncio.DatagramProtocol):
-    def __init__(self, message_handler, logger):
-        self.message_handler = message_handler
+    def __init__(self, logger):
         self.logger = logger
 
     def datagram_received(self, data, addr):
         message = data.decode()
         self.logger.info(f"Received message from {addr}: {message}")
-        if self.message_handler:
-            self.message_handler(message)
+        # Emit event instead of direct handling
+        dispatcher.send(signal="NetworkDataReceived", sender="UDPConnection", data=message)
 
     def error_received(self, exc):
         self.logger.error(f"UDP error received: {str(exc)}")

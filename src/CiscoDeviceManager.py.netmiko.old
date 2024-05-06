@@ -1,0 +1,100 @@
+from netmiko import ConnectHandler
+from typing import List
+import requests
+from CIPEventManager import CIPEventManager  # Ensure this is correctly imported
+
+class CiscoDeviceManager:
+    def __init__(self, default_device_config: dict, external_handler=None, logger = None):
+        """
+        Initialize with a device configuration.
+        :param device_config: A dictionary containing device parameters.
+        """
+        self.default_device_config = default_device_config
+        self.connection = None
+        self.device_logger = logger
+
+    def fetch_credentials(self, ip):
+        """
+        Fetch credentials securely based on the IP address.
+        """
+        try:
+            response = requests.get(f"https://your-credential-api.example.com/credentials?ip={ip}")
+            response.raise_for_status()
+            credentials = response.json()
+            return credentials
+        except requests.RequestException as e:
+            self.device_logger.error(f"Failed to fetch credentials: {e}")
+            return None
+
+    def fetch_credentials(self, ip):
+        """
+        Fetch credentials securely based on the IP address.
+        """
+        try:
+            response = requests.get(f"https://your-credential-api.example.com/credentials?ip={ip}")
+            response.raise_for_status()
+            credentials = response.json()
+            return credentials
+        except requests.RequestException as e:
+            self.device_logger.error(f"Failed to fetch credentials: {e}")
+            return None
+
+    def connect_and_retrieve_logs(self, sender, **kw):
+        """
+        Connects to the device using dynamically fetched credentials and retrieves logs.
+        """
+        event_id = kw['event_id']
+        event_manager = CIPEventManager()
+        event = event_manager.get_event(event_id)
+
+        if event:
+            ip = event.ip  # Assuming the event object has an 'ip' attribute
+            credentials = self.fetch_credentials(ip)
+            if not credentials:
+                self.device_logger.error(f"No credentials available for IP {ip}")
+                return  # Handle lack of credentials appropriately
+
+            # Prepare device configuration
+            device_config = self.default_device_config.copy()
+            device_config.update({
+                'ip': ip,
+                'username': credentials['username'],
+                'password': credentials['password']
+            })
+
+            # Attempt to connect and retrieve logs
+            self.connection = ConnectHandler(**device_config)
+            log_output = self.retrieve_events(event_id)
+            self.disconnect()
+            self.device_logger.info(f"Logs retrieved for event {event_id}: {log_output}")
+        else:
+            self.device_logger.error(f"Failed to retrieve event data for event_id: {event_id}")
+
+    def connect(self):
+        """
+        Establishes a connection to the Cisco device.
+        """
+        self.connection = ConnectHandler(**self.device_config)
+        self.device_logger.warning(f"Connected to the device successfully.")
+
+    def retrieve_events(self, event_id) -> str:
+        """
+        Retrieves logs or events from the Cisco device.
+        Returns the event log as a string.
+        """
+        if not self.connection:
+            self.device_logger.warning(f"Not connected to any device.")
+            return ""
+
+        # Example command to retrieve logs, adjust as per your device's configuration
+        log_output = self.connection.send_command(f"copy event-logging upload tftp://1.1.1.1/{event_id}.tar.gz")
+        return log_output
+
+
+    def disconnect(self):
+        """
+        Safely disconnect from the device.
+        """
+        if self.connection:
+            self.connection.disconnect()
+            self.device_logger.warning(f"Disconnected from the device successfully.")

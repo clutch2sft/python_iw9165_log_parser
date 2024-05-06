@@ -6,7 +6,7 @@ from stub_sftp_server import StubSFTPServer
 from stub_server import StubServer
 
 class MainSFTPServer:
-    def __init__(self, fs, logger, file_received_callback=None):
+    def __init__(self, fs, logger):
         self.fs = fs
         self.logger = logger
         self.server_socket = None
@@ -15,7 +15,6 @@ class MainSFTPServer:
         self.lock = threading.Lock()
         self.threads = []
         self.ssh_server = StubServer()  # Create an instance of StubServer here
-        self.file_received_callback = file_received_callback
 
 
     def _setup_transport(self, connection):
@@ -32,7 +31,7 @@ class MainSFTPServer:
 
     def _sftp_server_factory(self, channel, name, server, fs, *args):
         self.logger.debug(f"SFTP server factory called for channel: {name}")
-        return StubSFTPServer(channel, name, server, fs, self.logger, self.file_received_callback, *args)
+        return StubSFTPServer(channel, name, server, fs, self.logger, *args)
 
 
     def _handle_connection(self, connection):

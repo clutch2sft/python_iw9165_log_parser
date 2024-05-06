@@ -8,11 +8,10 @@ from fs.errors import ResourceNotFound
 
 
 class StubSFTPServer(SFTPServerInterface):
-    def __init__(self, channel, name, server, srv_fs, logger, file_received_callback=None, *args, **kwargs):
+    def __init__(self, channel, name, server, srv_fs, logger, *args, **kwargs):
         super().__init__(server)
         self.fs = srv_fs
         self.logger = logger
-        self.file_received_callback = file_received_callback
         # - setup paramiko logging
 
 
@@ -113,7 +112,7 @@ class StubSFTPServer(SFTPServerInterface):
         try:
             f = self.fs.open(path, mode)
             self.logger.debug(f"Opened file {path} with mode {mode}")
-            fobj = StubSFTPHandle(f, path, self.logger, self.file_received_callback)
+            fobj = StubSFTPHandle(f, path, self.logger)
             fobj.filename = path
             fobj.readfile = f
             fobj.writefile = f

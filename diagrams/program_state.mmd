@@ -1,0 +1,30 @@
+stateDiagram-v2
+    [*] --> CIPNetworkLIstener : Receive commfault event
+    [*] --> MainSFTPServer : Listen for SFTP connection
+    CIPNetworkLIstener --> EventManager : Store event info in data structure
+    EventManager --> EventData: Store Event Data
+    EventManager --> CiscoDeviceManager : Use SSH to connect to device
+    CiscoDeviceManager --> RequestLogs : Request log data via SSH
+    RequestLogs --> MainSFTPServer : Send SFTP
+    MainSFTPServer --> StubSFTPHandle : Receive new file via SFTP
+    StubSFTPHandle --> file_received_callback : Notify app via callback
+    StubSFTPHandle --> VirtualFileSystem: Store Tar File
+    file_received_callback --> process_tar_file : Untar and prepare for analysis
+    process_tar_file --> TarFileExtractor
+    TarFileExtractor --> process_extracted_files : Parse log info based on event time window
+    process_extracted_files --> IwEventParser
+    VirtualFileSystem --> TarFileExtractor : Read
+    TarFileExtractor --> VirtualFileSystem : Store Extracted Data
+    IwEventParser --> ErrorCodeMapping : Notify Analyzer
+    IwEventParser --> SyslogSender : Send log window to syslog server
+    IwEventParser --> EventData: Attach Log Data
+    ErrorCodeMapping --> MatchErrorCode : Match against error codes
+    MatchErrorCode --> EventManager: Get Orignal Event Data
+    MatchErrorCode --> NoError : No error found
+    MatchErrorCode --> FoundError : No error found
+    FoundError --> CIPMessageSender : Send error data back to originator
+    NoError --> CIPMessageSender : Send no error data back to originator
+    CIPMessageSender --> EventCleanup
+    EventCleanup --> VirtualFileSystem: Remove Files
+    EventCleanup --> EventManager: Remove Event
+    EventCleanup --> [*]: done

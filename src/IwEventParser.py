@@ -1,18 +1,46 @@
 from datetime import datetime, timedelta
+from pydispatch import dispatcher
+from CIPEventManager import CIPEventManager
+import os
 
 class IwEventParser:
-    def __init__(self, fs, filename, logger):
+    def __init__(self, fs, logger, event_window = 2):
         """
-        Initializes the IwEventParser with a virtual filesystem, a filename, and a logger.
-        
-        :param fs: The filesystem object to interact with files.
-        :param filename: The name of the file to parse.
-        :param logger: Logger instance for logging information.
+        Initializes the IwEventParser with a virtual filesystem and a logger.
         """
         self.fs = fs
-        self.filename = filename
         self.logger = logger
-        self.file_has_content = self._check_file_content()
+        self.event_window = event_window
+        dispatcher.connect(self.handle_extraction_completed, signal="ExtractionCompleted", sender=dispatcher.Any)
+
+    def handle_extraction_completed(self, sender, **kwargs):
+        manager = CIPEventManager.get_instance()  # Assuming there's a get_instance class method.
+        directory = kwargs['directory']
+        extracted_items = kwargs['extracted_items']
+        event_id = kwargs['event_id']
+        self.logger.info(f"Handling extracted data in directory: {directory} with items: {extracted_items}")
+
+        # Assume some way to determine the base timestamp and window, possibly from filename or metadata
+        base_timestamp = '01/01/2020 12:00:00.000'
+
+        log_results = {}
+        # Process each item that was extracted
+        for filepath in extracted_items:
+            filename = os.path.basename(filepath)
+            self.set_filename(filepath)  # Set the file to be processed
+            if self.is_file_non_empty():
+                filtered_logs = self.filter_events_by_time_window(base_timestamp, self.event_window)
+                if filtered_logs:
+                    # Store logs keyed by filename without the extension
+                    file_key = os.path.splitext(filename)[0]
+                    log_results[file_key] = filtered_logs
+        
+        # If there are any logs to add, add them to the event.
+        if log_results:
+            manager.add_categorized_logs_to_event(event_id, log_results)
+
+        # Optionally emit an event if other systems need to react to the completion of log processing
+        dispatcher.send(signal="LogProcessingCompleted", sender=self, event_id=event_id)
 
     def _check_file_content(self):
         """

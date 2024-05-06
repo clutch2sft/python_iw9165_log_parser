@@ -1,24 +1,29 @@
 import tarfile
 import datetime
-from fs import open_fs
-import io
+import os
+from pydispatch import dispatcher
+
 
 class TarFileExtractor:
-    def __init__(self, fs, tar_path, callback, logger, unique_dir = None):
+    def __init__(self, logger, fs = None):
         """
-        Initializes the TarFileExtractor with a virtual filesystem, a tar file path, a callback function, and a logger.
+        Initializes the TarFileExtractor with a logger.
         
-        :param fs: The filesystem object to interact with files.
-        :param tar_path: The virtual path to the .tar.gz file.
-        :param callback: Function to call after files are processed.
+        :param fs: The filesystem object to interact with files (can be set later).
         :param logger: Logger instance for logging information.
         """
         self.fs = fs
-        self.tar_path = tar_path
-        self.callback = callback
         self.logger = logger
-        self.unique_dir = unique_dir
         self.extracted_items = []  # List to store paths of extracted files and directories
+        dispatcher.connect(self.handle_file_received, signal="FileReceived", sender=dispatcher.Any)
+
+    def handle_file_received(self, sender, **kwargs):
+        self.fs = kwargs.get('fs')
+        self.tar_path = kwargs.get('path')
+        self.unique_dir = None  # Reset or create a new directory for each file
+        filename = os.path.basename(self.tar_path)
+        self.event_id = filename.split('.')[0]  # Assuming the format "event_id.tar.gz"
+        self.extract_files()
 
     def extract_files(self):
         if not self.unique_dir:
@@ -47,8 +52,8 @@ class TarFileExtractor:
             self.fs.remove(self.tar_path)
             self.logger.info(f"Removed original tar file: {self.tar_path}")
 
-            # Call the callback function with the directory and the list of extracted items
-            self.callback(self.unique_dir, self.extracted_items)
+            # Emit the custom event with the directory and the list of extracted items
+            dispatcher.send(signal="ExtractionCompleted", sender=self, directory=self.unique_dir, extracted_items=self.extracted_items, event_id=self.event_id)
 
         except Exception as e:
             self.logger.error(f"Error extracting {self.tar_path}: {str(e)}")
