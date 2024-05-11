@@ -23,6 +23,13 @@ class CIPEventManager:
             cls._instance = cls()
         return cls._instance
 
+    def get_event(self, event_id):
+        try:
+            return self.id_map[event_id]
+        except KeyError:
+            print("Event not found with ID:", event_id)
+            return None
+        
     def add_event(self, ip, dts, txt, erc):
         """
         Creates a new event and stores it in the manager.

@@ -92,11 +92,11 @@ async def main():
     extractor = TarFileExtractor(main_logger, vfs.get_fs())
     dispatcher.connect(extractor.handle_file_received, signal="FileReceived", sender=dispatcher.Any)
     # Initialize and register the IwEventParser
-    event_parser = IwEventParser(vfs.get_fs(), main_logger)
-    dispatcher.connect(event_parser.handle_extraction_completed, signal="ExtractionCompleted", sender=dispatcher.Any)
+    #event_parser = IwEventParser(vfs.get_fs(), main_logger)
+    #dispatcher.connect(event_parser.handle_extraction_completed, signal="ExtractionCompleted", sender=dispatcher.Any)
     # Deal with the log data which is to a) send to syslog server, b) do analysis of it for sending back to plc
-    syslog_sndr = SyslogSender(main_logger, '1.1.1.1', 514) # Configure these details
-    dispatcher.connect(syslog_sndr.handle_log_processing_completed, signal="LogProcessingCompleted", sender=dispatcher.Any)
+    #syslog_sndr = SyslogSender(main_logger, '1.1.1.1', 514) # Configure these details
+    #dispatcher.connect(syslog_sndr.handle_log_processing_completed, signal="LogProcessingCompleted", sender=dispatcher.Any)
     loop = asyncio.get_running_loop()
     # Attach signal handlers
     for signame in {'SIGINT', 'SIGTERM'}:
@@ -108,7 +108,12 @@ async def main():
         )
 
 
-    network_listener = CIPNetworkListener(host='0.0.0.0', port=9999, use_udp=True, logger=main_logger)
+    network_listener = CIPNetworkListener(host=config["CIPNetworkListener_host"], 
+                                          port=config["CIPNetworkListener_port"], 
+                                          use_udp=config["CIPNetworkListener_udp"], 
+                                          logger=main_logger,
+                                          config=config
+                                          )
     await network_listener.start_server()
 
     # Replace the old SFTP server start method with the new async one

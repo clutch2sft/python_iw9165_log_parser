@@ -1,5 +1,5 @@
 import asyncssh
-from AsyncMySSHSever import AsyncMySSHServer
+from AsyncSSHSever import AsyncSSHServer
 from AsyncSFTPServer import AsyncSFTPServer
 
 class AsyncMainSFTPServer:
@@ -19,15 +19,17 @@ class AsyncMainSFTPServer:
 
 
     async def start_sftp_server(self):
-        self.custom_logger.info(f'Starting SFTP server on {self.host}:{self.port}')
+        method_name = self.start_sftp_server.__name__
+        self.custom_logger.info(f'{self.__class__.__name__}:{method_name} Starting SFTP server on {self.host}:{self.port}')
         await asyncssh.listen(
             host=self.host,
             port=self.port,
             server_host_keys=[self.server_host_key],
             sftp_factory=self.create_sftp_server,
-            server_factory=lambda: AsyncMySSHServer(self.custom_logger)  # Create a new instance of MySSHServer for each connection
+            server_factory=lambda: AsyncSSHServer(self.custom_logger)  # Create a new instance of MySSHServer for each connection
         )
 
     def create_sftp_server(self, conn):
+        method_name = self.create_sftp_server.__name__
         # Create and return an instance of AsyncSFTPServer for each connection
         return AsyncSFTPServer(conn, self.fs, self.custom_logger)

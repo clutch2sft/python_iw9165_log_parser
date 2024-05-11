@@ -28,15 +28,18 @@
       "dot11_uplink_ev_regex": "DOT11_UPLINK_EV: parent_rssi: (-\\d+), configured low rssi: (-\\d+) serving (\\d+) scanning (\\d+)",
       "IPRoutingInfo": "IP: tableid=0, s=(\\d+\\.\\d+\\.\\d+\\.\\d+) \\(local\\), d=(\\d+\\.\\d+\\.\\d+\\.\\d+) \\(Vlan\\d+\\), routed via FIB"
     },
-    "sftp_rsa_keyfile": "/home/greggc/test_sftp_server_keyfile.key",
+    "sftp_rsa_keyfile": "/home/greggc/test_sftp_key.key",
     "sftp_listen_port": 3373,
     "sftp_host_ip": "localhost",
     "output_dir": "./logs",
     "console_level": "WARNING",
     "log_asyncssh": false,
     "asnyncssh_level": "DEBUG",
-    "log_format": "%(asctime)s - %(message)s"
-    
+    "log_format": "%(asctime)s - %(message)s",
+    "shared_secret": "helpme",
+    "CIPNetworkListener_host": "localhost",
+    "CIPNetworkListener_port": 9999,
+    "CIPNetworkListener_udp": false
   },
   "terminal_output": {
     "DEBUG": "gray",

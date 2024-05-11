@@ -17,3 +17,11 @@ readlink: Read the target of a symbolic link.
 There are muliptle PyDispatcher need the one below:
 
 pip install PyDispatcher
+
+requirements:
+
+asyncssh
+pycomm3
+requests
+kerberos
+pyrad
